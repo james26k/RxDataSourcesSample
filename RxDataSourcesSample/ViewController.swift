@@ -31,6 +31,7 @@ enum IntSectionRowItem: Int {
 struct SectionModel: SectionModelType {
     typealias Item = SectionItem
 
+    var title: String
     var items: [SectionItem]
 
     init(original: SectionModel, items: [Item]) {
@@ -38,7 +39,8 @@ struct SectionModel: SectionModelType {
         self.items = items
     }
 
-    init(items: [Item]) {
+    init(title: String, items: [Item]) {
+        self.title = title
         self.items = items
     }
 }
@@ -59,6 +61,8 @@ class ViewController: UIViewController {
                 cell.textLabel?.text = "\(number.rawValue)"
                 return cell
             }
+        }, titleForHeaderInSection: { dataSource, section in
+            dataSource.sectionModels[section].title
         }
     )
     private let refreshRelay = PublishRelay<Void>()
@@ -110,18 +114,24 @@ class ViewController: UIViewController {
 }
 // MARK: - ViewModel
 struct ViewModel {
-    func observeSectionInfo(viewDidLoad: PublishRelay<Void>,
-                            refresh: PublishRelay<Void>) -> (sectionInfo: Driver<[SectionModel]>,
-                                                             didChangeSectionInfo: PublishSubject<Void>) {
+    func observeSectionInfo(
+        viewDidLoad: PublishRelay<Void>,
+        refresh: PublishRelay<Void>
+    ) -> (
+        sectionInfo: Driver<[SectionModel]>,
+        didChangeSectionInfo: PublishSubject<Void>
+    ) {
         let didChangeSectionInfo = PublishSubject<Void>()
         let sectionInfo = Observable.merge(viewDidLoad.asObservable(),
                                            refresh.asObservable())
             .map {
                 [
-                    SectionModel(items: [.stringSection(.first),
+                    SectionModel(title: "String Section",
+                                 items: [.stringSection(.first),
                                          .stringSection(.second),
                                          .stringSection(.third)].shuffled()),
-                    SectionModel(items: [.intSection(.first),
+                    SectionModel(title: "Int Section",
+                                 items: [.intSection(.first),
                                          .intSection(.second),
                                          .intSection(.third)].shuffled())
                 ]
